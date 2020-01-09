@@ -1,0 +1,122 @@
+把添加到暂存区操作撤销的操作的前提是要先提交到本地库一次，否则他没有版本，也就是没有这个指针。
+Wangjiateng666@gmail.com
+The cutest person WHY
+git rm -r The/Custed/ddd		删除文件夹
+git pull origin master		推送
+git push origin master		更新
+:zany:
+:cn:
+
+wjiateng
+
+1. git clone https://github.com/link58/StudyBook.git --depth=1  最近一次上传 只传了一点.git
+git clone 网址  克隆别人的仓库
+git config --global user.name '自己的用户名'
+git config --global user.email '注册的邮箱'
+
+
+下载的时候,状态必须是https,否则没有权限
+
+git clone 网址 会自动生成文件并添加到远程地址
+  	git clone做了什么 1.下载了源码2.git init 3.git remote add origin xxx
+
+版本如何跳跃?
+git reset --hard  版本号
+
+1.git remote -v查看所有远程地址别名
+2.git remote add why https://github.com/link58/StudyBook.git  给这个网站添加一个别名/添加
+3.git remote remove why  删除指定网址
+4.git remote rename old(旧名字) new(新名字)
+5.
+
+
+git push 别名 分支名(master)
+
+
+
+	fork
+1.可以fork一份别人的网站到自己的github下 可以进行修改
+2.向被fork的人发送请求  pull request
+3.如果fork被接受了 就会合并
+
+当不会使用某条命令的时候可以使用git --help  如果是指定某一条 例如push  git push --help
+
+
+
+多分支 
+
+git branch -v查看分支
+git checkout master    分支  切换分支	也可以使用git switch master
+git branch -d 分支名字—— 删除分支
+git merge 合并分支的名字——合并分支————————两次合并算一次修改，会进入描述模式   b分支是要被合并的分支，所以切换在a分支上
+git branch -d branchName——删除合并后的分支
+
+分支合并的时候是本地库合并
+
+切换一个分支会把你当前暂存区中的内容撤销掉
+
+
+
+解决冲突		——冲突的标识（master|MERGING）如果解决了 就会变成(master)
+
+因为git通过行来管理，所以冲突也是由行来产生。
+
+1.git diff 文件名	查看修改了什么内容		只要修改了就会显示红色，新的就是绿色，以行来管理
+2.
+先git pull拉取,之后就会进入冲突中,手动解决了冲突之后再次提交即可,解决方法和分支冲突一样.
+
+删除标识符 再次提交
+<<<<<<<<<HEAD
+1111122
+2222222
+=====
+111122DDS
+SDF522222
+>>>>>>>>>>2ddfakdf2334556
+
+
+
+分支冲突
+--编辑文件，删除特殊符号
+--再次提交
+
+
+
+http无状态
+http——https
+SSH——密钥对
+公钥——钥匙
+私钥——锁
+
+1.cd ~
+2.pwd 	当前目录
+3.ssh-keygen -t rsa -C 你的账号————起一个名字
+
+
+
+CDN找离自己最近的
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -32,7 +32,7 @@ function test(){
     }
 }
 test();
-alert(a());
+alert(y());
 ```
 
 * 什么是闭包？	可以访问函数内部的私有变量，并且还是一个函数
@@ -427,8 +427,6 @@ var jso=JSON.parse(person);//json把字符串转化为对象
 console.log(jso);
 ```
 
-
-
 ## this的使用及指向
 
 1. 函数(仅限于普通函数)创建时产生一个this
@@ -457,12 +455,14 @@ console.log(jso);
    
 5. 面向对象下的this
 
+   ```js
+   使用new关键字创建一个实例对象，构造函数中的this指向了该实例对象，同时实例对象的this指向构造函数的原型对象
+   function Box(name){
+       this.name=name;
+   }
+   Box.prototype.fun=function({this});
+   new Box("tom").run();//this指向Box.prototype
    ```
-   使用new关键字创建一个实例对象
-   ```
-
-   
-
 
 
 ## 继承
@@ -508,6 +508,10 @@ objC.sayColor();/classC中没有sayColor classB中也没有sayColor classB从cla
 ## 使用方法继承
 
 将改变this的指向，继承给谁指向的就是谁
+
+call apply bind只能继承构造函数里面的属性和方法
+
+使用构造函数继承的特点:直接把父类中的属性和方法集成到自雷的构造函数中,在这个继承过程中使用call、bind()、apply
 
 call和apply的用法是一样的，区别在于参数上边，**call的参数使用的是字符串来继承的，apply使用的是数组来继承的**
 
@@ -555,7 +559,6 @@ call和apply的用法是一样的，区别在于参数上边，**call的参数�
    Animal.bind(cat,"")();/*不写引号就是全部都继承*/
    ```
 
-   
 
 ## 原型链
 
@@ -571,7 +574,7 @@ String.prototype.属性名/方法名=值
 ```js
 __proto__:引用属性，隐形属性，当使用prototype找不到构造函数的情况下会使用__proto__这个隐形属性进行查找，在查找的过程中会一级一级的往上找，直到找到的object是null为止。再找的过程中会形成一个链式操作，这个链式操作就称之为原型链。
 var str="123";
-console.log(str._proto_);
+console.log(str.__proto__);
 console.log(str.prototype);
 通过prototype找到父类然后调用这个方法——如果prototype不指向这个属性才会再通过__proto__找
 
@@ -592,31 +595,275 @@ function test(){}
     test.prototype.getSex=function(){
         alert(this.sex);
     }
-test.prototype=new Person("");/可以获取到Person与Person.prototype上的值
+test.prototype=new Person("");//可以获取到Person与Person.prototype上的值
 var a=new test();
 a.getSex();
 a.getName();
 ```
 
+因为对象本身有prototype这个属性和__ proto__这个隐形属性，如果想要实现原型链的话，通过的是这两个属性实现的，原型链是一种链式操作，一层一层网上找，直到到null为止
+
+## 构造函数继承
+
+```js
+function Person (name) {	//父类
+    this.name = name;
+    this.friends = ['小李','小红'];
+    this.getName = function () {
+        return this.name;
+    }
+};
+function Parent (age) {		//子类
+    Person.call(this,'老明');	//这一句是核心关键
+    //这样就会在新parent对象上执行person构造函数中定义的所有对象初始化代码，
+    //结果parent的每个实例都会聚有自己的friends属性的副本
+    this.age = age;
+};
+var result = new Parent(23);
+console.log(result.name);	//老明
+console.log(result.friends);	//['小李','小红']
+console.log(result.getName());	//老明
+console.log(result.age);	//23
+console.log(result.getSex());	//这个会报错，调用不了父类原型上面扩展的方法
+```
+
+## 组合继承
+
+call apply bind只能继承父类构造函数里面的属性和方法，在父类原型对象上绑定的属性和方法是无法继承的。
+
+Strting->如果想要扩展string这个构造函数中的属性和方法的情况下，那么这些属性和方法就必须要绑定在string构造函数的原型对象上，那么这些属性和方法，我们通过call是继承不了的，所以我们需要通过原型链继承。
+
+prototype只能继承父类构造函数原型对象上面的属性和方法，不能继承父类构造函数中的属性和方法。
+
+如果我们使用的是原型链来进行继承的，那么原型链上面的this代表的就是父类.prototype
+
+```js
+function Person(name){
+    this.name=name;
+    this.friends=["小李","小红"];
+};
+Person.prototype.getName=function(){
+    return this.name;
+};
+function Parent(age){
+    Person.call(this,"老明");
+    this.age=age;
+};
+Parent.prototype=new Person("老明");
+var result=new Parent(24);
+console.log(result.name);
+console.log(result.getName());
+result.friends.push("小智");
+console.log(result.friends);
+console.log(result.age);
+var result1=new Parent(25);
+//通过借用函数都有自己的属性，通过原型享用公共得犯法 console.log(result.name);
+console.log(result1.friends);//["小李","小红"]
+```
+
+组合继承和寄生组合继承的区别：
+
+* 组合继承的话是直接使用call和prototype来继承到子类中
+* 寄生组合继承：通过call先把父类的构造函数中的属性和方法继承过来，然后在继承父类原型对象上面的属性和方法的时候，通过一个中间类进行继承
+
+## 寄生组合继承(中间类继承)
+
+在这个过程当中，person依然是父类，parent依然是子类，使用中间类的好处是，父类不用反复调用，只需要调用一次父类即可，如果不使用中间类的话， 子类只要被实例化那么父类就会被调用，原型链不会变
+
+缺点：多写代码
+
+```js
+function Person(name){ //父类
+    this.name=name;
+    this.friends=["小李","小红"];
+}
+Person.prototype.getName=function(){  //父类原型对象
+    return this.name;
+};
+function Parent(age){  //子类
+    Person.call(this,"老明");
+    this.age=age;
+}
+(function (){
+    var Super=function(){};//创建一个没有实例化的类中  中间类
+    Super.prototype=Person.prototype;  //直接把父类原型对象上面的属性和方法给中间类的原型对象了
+    Parent.prototype=new Super();  //将中间类实例作为子类的原型
+})();//相当于把父类给了Super然后再实例化Super[其实实例化super就是在实例化Person]最后把他赋给子类就完成了继承
+var result=new Parent(23);
+console.log(result.name);
+console.log(result.friends);
+console.log(result.getName());
+console.log(result.age);
+```
+
 * 继承方法：
 
-  1.属性继承
+  属性继承
 
-  2.call、apply、bind()
+  call、apply、bind()
 
-  3.原型链继承
+  原型链继承
 
-  4.构造函数继承
+  构造函数继承
 
-  5.组合继承
+  组合继承
 
-  6.寄生组合继承
+  寄生组合继承
 
-* 拷贝方式
+## 面向对象的选项卡的封装
 
-  深拷贝和浅拷贝
+面向过程的封装：就直接写一个函数，通过传值的方式调用这个函数，找对象的时候直接找，直接操作
 
-因为对象本身有prototype这个属性和__ proto__这个隐形属性，如果想要实现原型链的话，通过的是这两个属性实现的，原型链是一种链式操作，一层一层网上找，直到到null为止
+面向对象的封装：需要实例化一个对象，在实例化的这个对象中传值，找对象的时候是把对象作为构造函数的属性来操作的，如果需要操作这个对象的话就直接操作的是构造函数的属性，如果要绑定事件那么必须要有处理函数，这个处理函数是构造函数的方法，这个时候在处理函数中的this由构造函数变成了被绑定的属性了，这个处理函数是构造函数里面的方法，那么我们需要把this的指向重新定义，这也就是为什么有_this=this的原因
+
+```js
+window.onload=function(){
+        new switchButton("div1","input","div");//实例化
+    }
+    function switchButton(id,In,di){
+        var _this=this;//把this的指向重新定义 this指向switchButton
+        var oDiv=document.getElementById(id);
+        this.aBtn=oDiv.getElementsByTagName(In);
+        this.aDiv=oDiv.getElementsByTagName(di);
+        for(var i=0;i<this.aBtn.length;i++){
+            this.aBtn[i].index=i;
+            this.aBtn[i].onclick=function(){
+                _this.fnClick(this);//_this指向aBtn[i]，指向不同所以才需要去声明
+            }
+        }
+    }
+    switchButton.prototype.fnClick=function(oBtn){//绑定在函数或函数原型上都可以
+        for(var i=0;i<this.aBtn.length;i++){
+            this.aBtn[i].className="";
+            this.aDiv[i].style.display="none"
+        }
+        oBtn.className="active";
+        this.aDiv[oBtn.index].style.display="block";
+    }
+```
+
+## 深拷贝和浅拷贝
+
+浅拷贝：当改变拷贝的对象里面的引用类型时，源对象也会改变。
+
+深拷贝：修改对对象没有影响
+
+变就是深拷贝，不变就是浅拷贝
+
+变量不存在深浅拷贝，只有数组和对象存在。
+
+```js
+以此为例
+
+```
+
+
+
+```js
+浅拷贝
+var a=[0,1,2,3,4];
+b=a;
+console.log(b===a);
+a[0]=8;
+console.log(a,b);//指向的地址是一个
+```
+
+```js
+深拷贝
+function deepClone(obj){//是实现对象深拷贝的方法，参数obj是需要拷贝的源对象，用完这个方法之后需要返回一个新的对象，也就是使用深拷贝，拷贝出来的对象，它会指向一个新的内存空间。
+    var objClone=Array.isArray(obj)?[]:{};//这个是创建出来的新对象，如果源对象是数组那就是空数组，是对象就是空对象
+    if(obj!=null&&typeof obj==="object"){	//obj就是为了判断是否是空，typeof就是为了判断是否是对象，同时满足
+        //判断obj子元素是否为对象，如果是，递归复制
+        for(key in obj){//为了之后的复制做准备，因为不遍历没办法复制
+            if(obj.hasOwnProperty(key)){//单纯的为了判断子元素是否为对象
+                 if(obj[key]&&typeof obj[key]==="object"){
+            		objClone[key]=deepClone(obj[key]);//直接使用递归函数进行调用即可
+        		}else{
+            		objClone[key]=obj[key];//如果不是，简单复制
+        		}
+            }
+        }
+        return objClone;
+}
+let a=[1,2,3,4],
+    b=deepClone(a);
+a[0]=2;
+console.log(a,b);
+//不管是a也好还是b也好，他们两个指向的内存空间都是a所在的内存空间，所以a变都变
+```
+
+```js
+function parseQuery(){
+ 	var str=url.split("?")[1];
+    var items=str.split("&");
+    var arr,Json={};
+    for(var i=0;i<items.length;i++){
+        arr=item[i].split("=");
+        Json[arr[0]]=arr[1];
+    }
+    return Json;
+}
+var obj=parseQueryString(URL);
+console.log(obj);
+```
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
