@@ -757,7 +757,8 @@ window.onload=function(){
 
 ```
 
-
+* 浅拷贝只在根属性上在堆内存中创建了一个新的的对象，复制了基本类型的值，但是复杂数据类型也就是对象则是拷贝相同的地址。
+* 而深拷贝则是将一个对象从内存中完整的拷贝一份出来，从堆内存中开辟一个新的区域存放新对象，且修改新对象不会影响原对象。
 
 ```js
 浅拷贝
@@ -807,13 +808,83 @@ var obj=parseQueryString(URL);
 console.log(obj);
 ```
 
- 
+##  防抖和节流
 
+在进行窗口的resize、scroll，输入框内容校验等操作时，如果事件处理函数调用的频率无限制，会加重浏览器的负担，导致用户体验非常糟糕。此时我们可以采用debounce(防抖)和trottle(节流)的方式来减少调用频率，同时又不影响实际效果。
 
+### 防抖
 
+函数防抖：当持续触发时间时，**一定时间段内没有再触发事件**
 
+原理：利用的是延迟器，让它在执行事件处理函数的时候，不立即执行，让它有一个延迟时间，如果在这个延迟时间里不再调用的话，那么到延迟时间的话就执行。如果在延迟时间里，再次调用的话，就清空上一次的调用，在本次执行的基础上进行延迟。
 
+```js
+//防抖
+function debounce(fn,wait){
+    var timeout=null;
+    return function(){
+        if(timeout!==null){
+            clearTimeout(timeout);
+        }
+        timeout=setTime(fn,wait);
+    }
+}
+//处理函数
+function handle(){
+    console.log(Math.random());
+}
+//滚动事件
+window.addEventListener("scroll",debounce(handle,1000));
+```
 
+### 节流
+
+函数节流：当持续触发时间时，保证**一定时间内只调用一次事件处理函数**。
+
+两种：时间戳和
+
+用于：连续登录，如何阻止：节流
+
+```js
+时间戳
+var throttle=function(func,delay){
+    var prev=Date.now();//第一次执行的时候的时间,此次不会触发时间戳
+    return function(){
+        var context=this;//this指向window
+        var args=arguments;//实参对象
+        var now=Date.now();//再一次执行的时间
+        if(now-prev>=delay){//当前时间减去上次触发时间如果大于等于延迟的时间才可以继续执行
+            func.apply(context,args);//也可以写func()  ["hello",args]
+            prev=Date.now();//触发时间，作为起始时间
+        }
+    }
+}
+function handle(){
+    console.log(Math.random());
+}
+window.addEventListener("scroll",throttle(handle,1000));//谁触发this就是谁
+```
+
+```js
+定时器
+var throttle = function(func, delay) {            
+    var timer = null;            
+    return function() {                
+        var context = this;               
+        var args = arguments;                
+        if (!timer) {                    
+            timer = setTimeout(function() {                        
+                func.apply(context, args);                        
+                timer = null;                    
+            }, delay);                
+        }            
+    }        
+}        
+function handle() {            
+    console.log(Math.random());        
+}        
+window.addEventListener("scroll", throttle(handle, 1000));
+```
 
 
 
