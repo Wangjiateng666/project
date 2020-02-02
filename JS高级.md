@@ -427,6 +427,279 @@ var jso=JSON.parse(person);//json把字符串转化为对象
 console.log(jso);
 ```
 
+## 读取对象的属性
+
+读取对象的属性，有两种方法，一种是使用点运算符，还有一种是使用方括号运算符。
+
+```js
+var obj = {
+  p: 'Hello World'
+};
+
+obj.p // "Hello World"
+obj['p'] // "Hello World"
+```
+
+上面的代码分别使用点运算符和方括号运算符，读取属性`p`
+
+请注意，如果使用方括号运算符，键名必须放在引号里面，否则会被当做变量处理。
+
+```js
+var foo = 'bar';
+var obj = {
+  foo: 1,
+  bar: 2
+};
+
+obj.foo  // 1
+obj[foo]  // 2
+```
+
+上面代码中，引用对象`obj`的`foo`属性时，如果使用点运算符，`foo`就是字符串；如果使用方括号运算符，但是不使用引号，那么`foo`就是一个变量，指向字符串`bar`。
+
+方括号运算符内部还可以使用表达式，数字键可以不加引号，因为会自动转成字符串。但是，数字键名不能使用点运算符因为会被当做小数点，只能使用方括号运算符。
+
+```js
+var obj = {
+  123: 'hello world'
+};
+
+obj.123 // 报错
+obj[123] // "hello world"
+```
+
+## 1.属性的赋值
+
+点运算符和方括号运算符，不仅可以用来读取值，还可以用来赋值
+
+```js
+var obj = {};
+
+obj.foo = 'Hello';
+obj['bar'] = 'World';
+```
+
+上面代码中，分别使用点运算符和方括号运算符，对属性赋值。
+
+JavaScript 允许属性的“后绑定”，也就是说，你可以在任意时刻新增属性，没必要在定义对象的时候，就定义好属性。
+
+```js
+var obj={p:1};
+var obj={};
+obj.p=1;
+```
+
+## 2.属性的查看
+
+查看一个对象本身的所有属性，可以使用`Object.keys`方法
+
+```js
+var obj={
+	key1:1;
+	key2:2
+};
+Object.keys(obj);
+//['key1','key2']
+```
+
+## 3.属性的删除：delete命令
+
+`delete`命令用于删除对象的属性，删除成功后返回`true`
+
+```js
+var obj = { p: 1 };
+Object.keys(obj) // ["p"]
+
+delete obj.p // true
+obj.p // undefined
+Object.keys(obj) // []
+```
+
+上面代码中，`delete`命令删除对象`obj`的`p`属性。删除后，再读取`p`属性就会返回`undefined`，而且`Object.keys`方法的返回值也不再包括该属性。
+
+注意：删除一个不存在的属性，`delete`不报错，而且返回`true`。
+
+```js
+var obj = {};
+delete obj.p // true
+```
+
+上面代码中，对象`obj`并没有`p`属性，但是`delete`命令照样返回`true`。因此，不能根据`delete`命令的结果，认定某个属性是存在的。
+
+只有一种情况，`delete`命令会返回`false`，那就是该属性存在，且不得删除。
+
+```js
+var obj=Object.defineProperty({}, 'p',{
+	value:123,
+	confighurable:false,
+})
+
+obj.p;
+delete obj.p;
+```
+
+上面代码之中，对象`obj`的`p`属性是不能删除的，所以`delete`命令返回`false`（关于`Object.defineProperty`方法的介绍，请看《标准库》的 Object 对象一章）。
+
+另外，需要注意的是，`delete`命令只能删除对象本身的属性，无法删除继承的属性（关于继承参见《面向对象编程》章节）。
+
+```js
+var obj={};
+delete obj.toString //true
+obj.toString //function toString() {[native code]}
+```
+
+上面代码中，`toString`是对象`obj`继承的属性，虽然`delete`命令返回`true`，但该属性并没有被删除，依然存在。这个例子还说明，即使`delete`返回`true`，该属性依然可能读取到值。
+
+## 4.属性是否存在：in运算符
+
+`in`运算符用于检查对象是否包含某个属性（注意，检查的是键名，不是键值），如果包含就返回`true`，否则返回`false`。它的左边是一个字符串，表示属性名，右边是一个对象。
+
+```js
+var obj={p:1};
+'p' in obj //true
+'toString' in obj //true
+```
+
+`in`运算符的一个问题是，它不能识别哪些属性是对象自身的，哪些属性是继承的。就像上面代码中，对象`obj`本身并没有`toString`属性，但是`in`运算符会返回`true`，因为这个属性是继承的。
+
+这时，可以使用对象的`hasOwnProperty`方法判断一下，是否为对象自身的属性。
+
+```js
+var obj={};
+if('toSting' in obj){
+	console.log(obj.hasOwnProperty('toString'))//false
+}
+```
+
+## 5.属性的遍历：for...in循环
+
+`for...in`循环用来遍历一个对象的全部属性。
+
+```js
+var obj={a:1,b:2,c:3};
+
+for(var i in obj){
+	console.log('键名:',i);
+	console.log('键值:',obj[i]);
+}
+// 键名： a
+// 键值： 1
+// 键名： b
+// 键值： 2
+// 键名： c
+// 键值： 3
+```
+
+`for...in`循环有两个使用注意点。
+
+- 它遍历的是对象所有可遍历（enumerable）的属性，会跳过不可遍历的属性。
+- 它不仅遍历对象自身的属性，还遍历继承的属性。
+
+举例来说，对象都继承了`toString`属性，但是`for...in`循环不会遍历到这个属性。
+
+```
+var obj={};
+
+//toString 属性是存在的
+obj.toString //toString() { [native code] }
+
+for(var p in obj){
+	console.log();
+}//没有任何的输出
+```
+
+上面代码中，对象`obj`继承了`toString`属性，该属性不会被`for...in`循环遍历到，因为它默认是“不可遍历”的。关于对象属性的可遍历性，参见《标准库》章节中 Object 一章的介绍。
+
+如果继承的属性是可遍历的，那么就会被`for...in`循环遍历到。但是，一般情况下，都是只想遍历对象自身的属性，所以使用`for...in`的时候，应该结合使用`hasOwnProperty`方法，在循环内部判断一下，某个属性是否为对象自身的属性。
+
+```js
+var person={name:'老张'};
+
+for(var key in person){
+	if(person.hasOwnproperty(key)){
+		console.log(key);
+	}
+}
+//name
+```
+
+## 6.with语句
+
+`with`语句的格式如下：
+
+```js
+with(对象){
+	语句;
+}
+```
+
+它的作用是操作同一个对象的多个属性时，提供一些书写的方便。
+
+```js
+//例一
+var obj={
+    p1:1,
+    p2:2,
+};
+with(obj){
+    p1=4;
+    p2=5;
+}
+//等同于
+obj.p1=4;
+obj.p2=5;
+
+//例二
+with(document.links[0]){
+    console.log(href);
+    console.log(title);
+    console.log(style);
+}
+//等同于
+console.log(document.links[0].href);
+console.log(document.links[0].title);
+console.log(document.links[0].style);
+```
+
+注意，如果`with`区块内部有变量的赋值操作，必须是当前对象已经存在的属性，否则会创造一个当前作用域的全局变量。
+
+```js
+var obj={};
+with(obj){
+	p1=4;
+	p2=5;
+}
+
+obj.p1;//undefined
+p1//4
+```
+
+上面代码中，对象`obj`并没有`p1`的属性，对`p1`赋值等于创造一个全局变量`p1`。正确的写法应该是，先定义对象`obj`的属性`p1`，然后在`with`区块内操作它。
+
+这是因为`with`区块没有改变作用域，它的内部依然是当前作用域。这造成了`with`语句的一个很大的弊病，就是绑定对象不明确。
+
+```js
+with (obj){
+	console.log(x);
+}
+```
+
+单纯从上面的代码块，根本无法判断`x`到底是全局变量，还是对象`obj`的一个属性。这非常不利于代码的除错和模块化，编译器也无法对这段代码进行优化，职能留到运行时判断，这就拖慢了运行速度。因此，建议不要使用`with`语句，可以考虑用一个临时变量代替`with`。
+
+```js
+with(obj1.obj2.obj3){
+	console.log(p1+p2);
+}
+
+//可以写成
+var temp=obj1.obj2.obj3;
+console.log(temp.p1+temp.p2);
+```
+
+
+
+
+
 ## this的使用及指向
 
 1. 函数(仅限于普通函数)创建时产生一个this

@@ -120,21 +120,25 @@ y=9;
 
 **1.数值型（Number）：整型和实数**
 
-3  2.32  NaN:非数值，数值类型
+​		3  2.32  NaN:非数值，数值类型
 
 **2.布尔型（Boolean）：true false**
 
-布尔型可以做逻辑运算
+​		布尔型可以做逻辑运算
+
+​		**除undefined  null  false  0  NaN  ""  '' 其他都为true**
+
+​		空数组`[]`和空对象`{}`对应的都是true
 
 **3.空类型:Undefined/Null**
 
-undefined：变量没有赋值
+​		undefined：变量没有赋值
 
-null：对象为空
+​		null：对象为空
 
-**undefined+数值=NaN**
+​		**undefined+数值=NaN**
 
-变量为赋值
+​		**null转为数值时为0**
 
 **4.字符串型（String）：凡是单引号或双引号包裹的内容都是字符串**
 
@@ -146,7 +150,7 @@ null：对象为空
 
 返回数据类型
 
-typeof NaN	//number
+typeof NaN	//number				`NaN`不等于任何值，包括它本身
 
 typeof 3	//number
 
@@ -1381,7 +1385,7 @@ arguments.callee()方法
 ```javascript
 function test(n){	/*在函数内部调用自己*/
 	console.log(n);
-	argument.callee(n+1);
+	arguments.callee(n+1);
 }
 test(1)
 ```
@@ -1859,7 +1863,7 @@ function test(eq,hh,wid,hei){
     var hei=200;
     window.open(eq,hh,"width="+wid+",height="+hei+",top="+t+",left="+l);
 }
-test('equipment.html','hh',300,300);
+test('equipment.html','hh',300,300);//第二个值必须要写
 ```
 
 ## 9.6 History对象--属性
@@ -2123,7 +2127,7 @@ var t1=document.createTextNode("好好学习，天天向上");
 
 #### appendChild(node)--移动到后面
 
-对象（父元素）.apppendChild(node（要添加的对象）) 在指定元素内部的**后面**添加 
+对象（父元素）.appendChild(node（要添加的对象）) 在指定元素内部的**后面**添加 
 
 ```javascript
 d1.appendChild(p1);
@@ -2587,7 +2591,7 @@ for(var i=0;i<arr.length;i++){
 1. 什么是DOM：文档对象
 2. 找对象的方法：id、name、TagName、className(只能操作一次，但是都能找到)、表单form
 3. 创建对象的方法：createTextNode(文本节点)、createElement(元素节点)
-4. 添加节点方法：appendChild、对.insertBefore(新节点，参考节点【谁的前面】)
+4. 添加节点方法：appendChild、对insertBefore(新节点，参考节点【谁的前面】)
 5. 删除(removeChild)、替换(replaceChild)、判断子节点(hasChildNodes)、判断某个指定节点(contains)
 6. 父亲、第一个、最后一个、兄弟、孩子
 7. 复制节点：cloneNode：深拷贝、浅拷贝
@@ -2708,7 +2712,7 @@ function addEvent(elem,evtType,func){
 
 2. 支持该事件的对象image,window
 
-3. 支持该事件的标记body,fra?>me,frameset,iframe,img,link,script
+3. 支持该事件的标记body,frame,frameset,iframe,img,link,script
 
    ```javascript
    window.onload=function(){
@@ -3093,7 +3097,16 @@ d1.onclick=function(e){
   }
   ```
 
-* **stopPropagation()标准写法**
+  ```js
+  /*兼容性*/
+  if(e.preventDefault){
+  	e.preventDefault();
+  }else{
+  	e.returnValue=false;
+  }
+  ```
+
+* **stopPropagation()标准写法 阻止事件冒泡**
 
   阻止触发3的时候，是3引起，谁触发给谁加
 
@@ -3116,14 +3129,15 @@ d1.onclick=function(e){
   ```
 
   ```javascript
+  /*阻止事件冒泡方法*/
   document.getElementById("d2").onclick=function(){
   	alert("你单机了div2");
   }
   document.getElementById("d3").onclick=function(e){
   	e=e||window.event;
   	if(e.stopPropagation){
-  		e.stopProgation();
-	}else{
+			e.stopProgation();
+  }else{
   		e.cancelBubble=true;
   	}
   	alert("你单机了div3");
