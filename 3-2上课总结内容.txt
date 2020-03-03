@@ -1,0 +1,50 @@
+1、什么是ajax，ajax得访问步骤，同步和异步得区别
+    异步的xml和js
+    1、创建ajax对象---XMLHttpRequest
+    2、设置要提交得数据---可以随意存放在一个变量，方便发送
+    3、设置提交方式--open（get/post，url，true/false）
+         get或post必须写其中一个才行
+         url：是一个完整得路径，协议/域名/IP/端口/文件名，file，服务器上边得文件路径
+         true/false写一个
+    4、设置头部信息--setRequestHeader(label，value)，必须要放在open之后
+         label：content-type：类型
+         value：值：application/x-www-form-urlencoded
+    5、响应得处理--事件中，onreadystatechange：当数据返回得话会调用这个事件，处理数据得话同样放在得是这个方法中
+         readyState：存的是XMLHttpRequest对象得状态信息：响应完成
+	0：请求未初始化，没有调用open方法
+	1：调用了open没有调用send
+	2：请求接收了，开始处理请求
+	3：数据处理了一部分，没有响应
+	4：请求响应完成
+        status：响应是否接收了--http得状态码
+	200：成功接受：ok
+	404：页面未找到
+	500：服务器端错误
+    6、发送数据--send(要发送得数据)
+    区别：同步必须要等到上一次响应完成之后才能再次发送请求，异步可以同时发送多个请求，彼此之间不受任何影响
+
+2、http得状态码：
+      200：接收成功
+      404：页面未找到
+      500：服务器端错误
+
+3、返回值（返回得数据）
+      responseText：字符串格式（包括json格式得）
+      responseXML：XML格式得（是一段代码）
+      我需要接受得是test.js文件中的内容，var obj={};--responseText来进行接受的
+
+
+4、json：一种轻量级得数据交换格式
+     如何将json格式得字符串转化成js对象--
+     eval()
+     JSON.Parse
+
+
+
+
+
+
+
+
+
+
