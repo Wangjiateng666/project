@@ -1,0 +1,461 @@
+一、找到入口文件index.js，加载react，加载react-dom，加载App组件（1、执行App.jsx代码【只是通过React.createClass创建一个类，这个类的地址赋给App，他继承了三个属性，十个方法】2、将App导出的内容，导入），ReactDOM.render负责在真实DOM上渲染组件的DOM片段，组件中的return会返回内容，return之前会用babel-loader把内容转成JSX之后转成真实DOM，真实DOM会被插入挂载点(ReactDOM是操作真实DOM的【要在真实DOM上渲染】，<App />相当于实例化new App()，然后组件进入初始化阶段)，调用五个方法，按照顺序调用。
+
+ES5：const App=React.createClass({}),继承父类上的三个属性和十个方法
+-----------------------------------------------------------------
+类或对象属性：都是只读属性
+this.props 属性-->对外接口  耳朵
+this.state 状态-->对内接口  思想
+this.refs 存储真实DOM-->react自动赋值
+-----------------------------------------------------------------
+方法：生命周期方法
+	ES5:三个阶段10个方法
+	ES6:三个阶段8个方法
+-----------------------------------------------------------------
+二、ES5生命周期方法分为三个阶段：
+
+1.Mounting-初始化阶段
+	(1)初始化对象的属性this.props
+		getDefaultProps:function(){
+			return {
+				属性:"值"
+			}
+		}
+		this.props={属性:'值'}，如果没有getDefaultProps()生命周期方法，会自动调用父类getDefaultProps()方法给this.props={}空对象
+	(2)初始化对象的状态this.state
+		getInitialState:function(){
+			return {
+				属性:"值"
+			}
+		}
+		this.state={属性:'值'}，如果没有getInitialState()生命周期方法，会自动调用父类getInitialState()方法给this.state={}空对象
+	(3)挂载前：
+		componentWillMount():function(){
+		
+		}
+	(4)渲染方法：每个组件必须有render方法
+		render:function(){
+			//逻辑
+			return (
+				//jsx语法
+			)
+		}
+		将jsx-->虚拟DOM-->转换为真实DOM(render方法调用完生成真实DOM，所在render方法中无法获取真实DOM)，如果需要获取真实DOM需要使用this.refs
+	(5)挂载后(显示前)：
+		componentDidMount():function(){
+			//ajax
+			//获取真实DOM
+		}
+		componentDidMount方法中，可以获取真实DOM
+2.Updating-更新阶段
+	componentWillReceiveProps():子组件是否接收props
+
+	(6)判断是否进入更新阶段(父类中这个方法的默认功能是对比之前和之后的this.props或this.state是否相同，不同返回true进入更新状态；相同返回false不进入更新状态)
+		shouldComponentUpdate(nextProps,nextState){
+			//覆盖父类同名方法
+			//父类中的shouldComponentUpdate功能：
+			//比较之前和之后的this.state
+			//比较之前和之后的this.props
+			//如果相等方法返回true,不相等返回false
+			//如果返回true进入更新阶段，如果返回false初始化阶段
+			return true;//进入更新状态
+			return false;//不进入更新状态
+		}
+	(7)组件更新前
+		componentWillUpdate()
+	(8)渲染方法：		render:function(){
+			//逻辑
+			return (
+				//jsx语法
+			)
+		}
+	
+	(9)组件更新后
+		componentDidUpdate()
+	
+3.Unmounting-卸载阶段
+	(10)将要卸载组件：DOM结构消失
+		componentWillUnmount()
+-----------------------------------------------------------------
+三、什么情况下，组件会重新render(进入更新阶段)：
+1.this.state发生改变--组件自身状态值this.state发生改变进入更新状态
+2.this.props发生改变--父组件的状态this.state改变引发子组件的this.props变化，父组件和子组件都发生了变化。
+-----------------------------------------------------------------
+四、React.PropTypes
+1.自react 15.5后被弃用，之前是react自带，现在已被分离出需要使用独立库：prop-types代替。
+2.作用：组件属性this.props类型检测
+-----------------------------------------------------------------
+五、如何在React中获取真实DOM对象
+1.事件对象.target 触发时间的DOM对象
+2.this.refs真实DOM对象组成的对象
+{ref值:DOM对象,ref值:DOM对象}
+
+想获得谁的真实DOM只需要给他一个ref属性即可，
+<input type="text" ref="myInput" />
+this.setState({
+	msg:this.refs.myInput.value
+})
+-----------------------------------------------------------------
+六、MVVM双向数据绑定
+M model 数据模型层
+V view  视图层
+
+M-->V-->V-->M
+React不是一个完整的MVVM(因为他是通过异步函数来实现VM的变化)，但可以实现MVVM
+MVVM优点：
+	开发人员只关注数据和业务逻辑，不关注DOM操作，使开发者从复杂的DOM操作中解放出来，更加关注数据和业务。
+-----------------------------------------------------------------
+React高性能：
+	--虚拟DOM
+	--diff算法 different差异
+
+在页面一开始打开的时候，react会调用render函数构建一颗DOM树，在state/props发生改变的时候，render函数会被再次调用渲染出另外一颗树，接着，react会用两棵树进行对比，找到需要更新的地方批量改动。
+
+diff算法：
+这个过程中，比较两颗DOM tree高效找出需要更新的地方是很重要的。
+基于两个假设：
+1.两个相同的组件产生类似的DOM结构，不同组件产生不同DOM结构
+2.对于同一层次的一组子节点，他们可以通过唯一的key区分
+
+
+如果父节点不同，react将不会再去对比子节点。因为不同的组件DOM结构会不相同，所以就没有必要再去比较子节点了。这也提高了对比的效率。
+
+diff算法具体操作：
+分为两种情况
+1.节点类型不同：react会基于第一条假设，直接删去旧的节点，新建一个新的节点。
+2.节点类型相同，但是属性不同：当对比相同系欸但类型时，react会对比他们的属性，只改变需要改变的属性。
+
+列表比较1：当对DOM节点的子元素进行比较时，react知识同时迭代两个子元素lists，并在有差异时产生变化。
+<ul>					<ul>
+	<li>One</li>			<li>One</li>
+	<li>Two</li>			<li>Two</li>
+</ul>						<li>Three</li>
+					</ul>
+列表比较2：如果在子元素的开头部分插入一个元素的话，性能会变得很差，会修改每一个子元素。这是没有key值的情况下。
+<ul>					<ul>
+						<li>Zero</li>
+	<li>One</li>			<li>One</li>
+	<li>Two</li>			<li>Two</li>
+</ul>					</ul>
+
+列表比较3:为每一个子元素添加一个唯一的key,react使用key将原始数中的子元素与后续树中的子元素进行匹配
+<ul>					<ul>
+						<li key="0">Zero</li>
+	<li key="1">One</li>		<li key="1">One</li>
+	<li key="2">Two</li>		<li key="2">Two</li>
+</ul>					</ul>
+
+-----------------------------------------------------------------
+react用到的ajax封装：
+1.jQuery ajax封装 $.ajax()
+2.fetch将jQuery ajax封装再用promise进行封装
+	mockjs无法拦截fetch请求，只能用静态mock
+3.axios 开发中使用最多，原生js的ajax的promise封装
+
+后端数据：
+	---静态mock
+		问题：静态mock数据是在src/mock下，webpack-dev-server运行的网站根目录是./dist所以会出现404错误
+		解决方法：
+		如果你使用静态mock数据，那么需要安装一个插件帮你将mock数据拷贝到发布目录./dist/mock 即可正常访问。
+		插件：copy-webpack-plugin
+		
+	---mockjs  
+		不需要插件，只需要import进来
+	
+	---公司开发测试服务器，需要配置proxy代理
+		不需要插件，需要在devServer配置下，proxy就可以
+
+-----------------------------------------------------------------
+模拟开发场景：
+1.UI效果图 接口文档，后端人员已经把mock数据传到公司开发测试服务器http://www.bjlink32.com/check1.php
+2.前端开发的时候，直接使用公司的开发测试服务器接口即可
+3.前端开发完将代码发布到公司服务器
+4.后端开发完将真实接口发布到公司服务器
+5.前端只需要在自己电脑上就可以进行联调
+
+-----------------------------------------------------------------
+fetch和axios：
+1.fetch jQuery的$.ajax()的基础上，做的promise封装
+	--多发一层
+	--发json需要将js对象转换为json
+
+2.axios 原生js的Promise封装
+	--默认发送和接收的都是json
+
+axios特征：
+	从浏览器中创建XMLHttpRequest
+	从node.js发出http请求
+	支持Promise API
+	拦截请求和响应
+	转换请求和响应数据
+	取消请求
+	自动转换JSON数据
+	客户端支持防止 CSRF/XSRF(跨站请求伪造)
+
+-----------------------------------------------------------------
+实例：axios-get方法
+
+        axios.get('./mock/data.json')
+        .then(response=>{
+        //response响应对象，存储的服务器响应信息，请求信息
+        //response.data服务器响应的数据
+            console.log(response)
+            let {data} = response
+            this.setState({
+                myData:data.data
+            })
+        })
+        .catch(error=>{
+            alert(error)
+        })
+-----------------------------------------------------------------
+实例：axios-get方法带参数请求
+方法一：
+	//带请求参数——mockjs不支持,直接用php接口(不用静态mock)
+
+	   axios.get('./mock/data.json?name=why')
+        .then(response=>{
+            console.log(response)
+            let {data} = response
+            this.setState({
+                myData:data.data
+            })
+        })
+        .catch(error=>{
+            alert(error)
+        })
+方法二：
+	axios.get('data.php',{
+		params:{
+			name:"刘能"
+		}
+	}
+	.then(res=>{
+		console.log(res)
+	})
+
+-----------------------------------------------------------------
+Post带参数请求：动态mock数据json
+说明：axios默认发送和接收的都是json数据
+
+
+        axios.post('data.php',{
+                    name:'jarry',
+                    age:'21'
+                })
+        .then(response=>{
+            console.log(response)
+        })
+        .catch(error=>{
+            alert(error)
+        })
+
+-----------------------------------------------------------------
+实验一：post发送json 接收服务器json
+	--模拟中小公司，没有开发测试服务器，前端只好花时间写mockjs数据拦截--花费时间
+
+实验二：post发送json 接收服务器json
+	--模拟大中型公司，有开发测试服务器，前端不需要写mock数据--直接使用公司的测试服务器即可
+	
+	本机的：webpack-dev-server服务器的代离proxy,跨域访问公司的开发测试服务器（例如：http://200.119.99.87:3200）
+
+-----------------------------------------------------------------
+实验一：
+登陆验证：
+axios.post('http://mock.shtodream.cn/mock/5e5c7910baf5c011f5fce706/example/pppost',{
+            name:userName,
+            id:passWord
+        })
+        .then(res=>{
+            console.log(res.data)
+            if (res.data.status === '10001'){
+                this.setState({
+                    msg:res.data.msg,
+                    show:{display:'none'}
+                })
+            }
+        })
+
+-----------------------------------------------------------------
+实验二
+axios.post('/data路由地址',{
+            name:userName,
+            id:passWord
+        })
+        .then(res=>{
+            console.log(res.data)
+            if (res.data.status === '10001'){
+                this.setState({
+                    msg:res.data.msg,
+                    show:{display:'none'}
+                })
+            }
+        })
+
+-----------------------------------------------------------------
+axios.all()使用方法：all后面是一个数组用于存放get请求的地址，axios.spread用来分割取回来的数据
+
+axios.all([
+axios.get('http://mock.shtodream.cn/mock/5e5c7910baf5c011f5fce706/example/pppost'),
+            axios.get('http://mock.shtodream.cn/mock/5e5c7910baf5c011f5fce706/example/sfsf1')
+        ])
+        .then(axios.spread((res1,res2)=>{
+            this.setState({
+                stu:res1.data.data,
+                prod:res2.data.data
+            })
+        }))
+
+-----------------------------------------------------------------
+axios({
+
+})
+问题：axios默认发送的是json--自动将js对象转换为json然后发送
+实际开发中：后台需要from-urlencoded数据怎么办？
+解决：使用URLSearchParams对象，可以往里面添加键值对
+
+let url = new URLSearchParams()
+url.append("name","tom")
+url.append("age",19)
+相当于
+name=tom&age=19
+传给后台，对数据进行编码
+
+如果想要获得需要使用get API
+url.get("name") //"tom"
+url.get("age") //"19"
+
+-----------------------------------------------------------------
+
+1.多页应用：网页由多歌页面构成，不同内容，放到不同的页面上，切换页面是通过<a href=""></a>进行切换
+	
+	缺点：从A.html跳转到(加载)B.html页面的时候，网速不好，容易出现白屏-->不像App
+
+2.单页应用：整个应用只有一个页面index.html
+
+	通过地址栏地址切换，切换不同组件或组件的不同状态，不会出现白屏--感受像App--用来Hybrid App
+
+-----------------------------------------------------------------
+
+router 路由
+
+react-router:提供一系列组件
+	功能：通过地址栏地址切换，切换不同组件或组件的不同状态
+
+react Router代码库包括：
+	react-router:实现了路由的核心功能
+	react-router-dom:网站应用开发提供组件和函数
+	react-router-native
+	react-router-redux React Router和Redux的集成
+	react-router-config 静态路由配置帮助助手
+	
+react-router-dom包依赖react-router
+	react-router.js
+	react-router-dom.js
+
+export * from 'react-router'将react-router中导出的对象再次导出
+-----------------------------------------------------------------
+react-router-dom提供的组件
+
+1.HashRouter 组件 用于创建Hash类型路由基于js的 # 兼容老浏览器
+2.BrowserRouter 组件用户创建Browser类型路由 不带 # ，他的原理是使用HTML5 history API (pushState,replaceState,popState)来使你的内容随着url动态改变的
+
+注意！BrowserRouter组件，不能通过地址栏手动改变
+3.NavLink组件
+4.Link组件
+
+说明：！！！！！！<Router>组件下只允许存在一个子元素，如存在多个则会报错。
+
+<Router>
+	//只允许存在一个子元素
+	<div>
+		<Route path="/" component={Home} />
+	</div>
+</Router>
+-----------------------------------------------------------------
+<Route>组件中的属性：
+path:路由匹配路径。没有path属性的Route总是会匹配
+exact:会完全匹配，完全符合path的路径才可以
+strict：匹配尾部有斜线的/，所以职能匹配/one/不能匹配/one
+
+<Route>组件的三种渲染方式：
+component:外部独立组件使用component
+render:内联，只会渲染这个组件，不会渲染他的子组件。
+
+属性延展：
+<Route path="/play" render={(props)=>{
+	return (
+		<div>
+			<h3>Play组件</h3>
+			{console.log("内联静态组件 props",props)}
+			<Story 
+				//想要在Story组件中操纵路由，而操纵路由就需要得				到history location match
+				//location={props.location}
+				//match={props.match}
+				//history={props.history}
+                     //可以使用属性的方法一个个传过去，但是过于繁琐
+                     //于是采用属性延展，即可获取所有的属性
+                     {...props}
+			/>
+		</div>
+	)
+}}
+-----------------------------------------------------------------
+自定义私有路由
+import Home from './../components/Home'
+import Cool from './../components/Cool'
+const PrivateRoute = ({component:Component,...rest})=>{
+	return (
+		<Route {...rest} render={props=>{
+			return (
+				<Component {...props} />
+			)
+		}}/>
+	)
+}
+const BaseRoutes = () =>{
+	return (
+		<Router>
+			<div>
+				<ul>
+					<li><Link to="/">首页</Link></li>
+					<li><Link to="/cool">路由中新建组件</Link></li>
+				</ul>
+				<Route path="/" component={Home} />
+				<PrivateRoute path="/cool" component={Cool}/>
+			</div>
+		</Router>
+	)
+}
+export default BaseRoutes;
+-----------------------------------------------------------------
+<Route>组件——路由传值
+<ul>
+	<li><Link to="/">Home首页</Link></li>
+	<li><Link to="/news/react全家桶/react-router">News页</Link></li>
+	<li><Link to="/course">Course页</Link></li>
+</ul>
+<Route path="/" exact component={Home} />
+<Route path="/news/:title/:content" component={News} />
+<Route path="/course" component={Course} />
+使用:
+News页面：
+const News = (props) => {
+	return (
+		<div>
+			<p>
+				{props.match.params.title}
+			</p>
+			<p>
+				{props.match.params.content}
+			</p>
+		</div>
+	)
+}
+
+
+通过this.props.match.params
+
+
+
+
+
